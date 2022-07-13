@@ -28,7 +28,6 @@ jobs:
         skip-build-cache: true
 
   test:
-    env:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
