@@ -43,7 +43,7 @@ jobs:
           ~/go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
-          ${{ runner.os }}-go-
+          ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
 
     - name: Setup gotestsum
       shell: bash
