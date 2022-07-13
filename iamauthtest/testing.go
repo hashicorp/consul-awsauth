@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/consul/internal/iamauth/responses"
-	"github.com/hashicorp/consul/internal/iamauth/responsestest"
+	"github.com/hashicorp/consul-awsauth/responses"
+	"github.com/hashicorp/consul-awsauth/responsestest"
 )
 
 // NewTestServer returns a fake AWS API server for local tests:

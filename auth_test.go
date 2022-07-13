@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/hashicorp/consul/internal/iamauth/iamauthtest"
-	"github.com/hashicorp/consul/internal/iamauth/responses"
-	"github.com/hashicorp/consul/internal/iamauth/responsestest"
+	"github.com/hashicorp/consul-awsauth/iamauthtest"
+	"github.com/hashicorp/consul-awsauth/responses"
+	"github.com/hashicorp/consul-awsauth/responsestest"
 	"github.com/hashicorp/go-hclog"
 	"github.com/stretchr/testify/require"
 )

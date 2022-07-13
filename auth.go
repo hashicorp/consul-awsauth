@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/consul/internal/iamauth/responses"
-	"github.com/hashicorp/consul/lib"
-	"github.com/hashicorp/consul/lib/stringslice"
+	"github.com/hashicorp/consul-awsauth/internal/glob"
+	"github.com/hashicorp/consul-awsauth/internal/stringslice"
+	"github.com/hashicorp/consul-awsauth/responses"
 	"github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-retryablehttp"
@@ -134,7 +134,7 @@ func (a *Authenticator) validateIdentity(clientArn string) error {
 	}
 	if a.config.EnableIAMEntityDetails {
 		for _, principalArn := range a.config.BoundIAMPrincipalARNs {
-			if strings.HasSuffix(principalArn, "*") && lib.GlobbedStringsMatch(principalArn, clientArn) {
+			if strings.HasSuffix(principalArn, "*") && glob.GlobbedStringsMatch(principalArn, clientArn) {
 				// Wildcard match, so it is trusted
 				return nil
 			}

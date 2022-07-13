@@ -3,7 +3,7 @@ package responsestest
 import (
 	"strings"
 
-	"github.com/hashicorp/consul/internal/iamauth/responses"
+	"github.com/hashicorp/consul-awsauth/responses"
 )
 
 func MakeGetCallerIdentityResponse(arn, userId, accountId string) responses.GetCallerIdentityResponse {

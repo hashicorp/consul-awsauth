@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/sts"
-	"github.com/hashicorp/consul/internal/iamauth/responses"
+	"github.com/hashicorp/consul-awsauth/responses"
 	"github.com/hashicorp/go-hclog"
 )
 

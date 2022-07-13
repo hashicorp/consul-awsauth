@@ -9,7 +9,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/hashicorp/consul/lib/stringslice"
+	"github.com/hashicorp/consul-awsauth/internal/stringslice"
 )
 
 const (
