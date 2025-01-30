@@ -391,8 +391,18 @@ func (t *BearerToken) getHeader(name string) (string, error) {
 // There's a deeper explanation of this in the Vault source code.
 // https://github.com/hashicorp/vault/blob/b17e3256dde937a6248c9a2fa56206aac93d07de/builtin/credential/aws/path_login.go#L1569
 func buildHttpRequest(method, endpoint string, parsedUrl *url.URL, body string, headers http.Header) (*http.Request, error) {
-	targetUrl := fmt.Sprintf("%s%s", endpoint, parsedUrl.RequestURI())
-	request, err := http.NewRequest(method, targetUrl, strings.NewReader(body))
+	targetUrl, err := url.Parse(endpoint)
+	if err != nil {
+		return nil, err
+	}
+	joinedPath, err := url.JoinPath(targetUrl.Path, parsedUrl.Path)
+	if err != nil {
+		return nil, err
+	}
+	targetUrl.Path = joinedPath
+	targetUrl.RawQuery = parsedUrl.RawQuery
+
+	request, err := http.NewRequest(method, targetUrl.String(), strings.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
