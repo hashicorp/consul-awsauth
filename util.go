@@ -83,7 +83,10 @@ func GenerateLoginData(in *LoginInput) (map[string]interface{}, error) {
 		stsRequest.HTTPRequest.Header.Add(in.ServerIDHeaderName, in.ServerIDHeaderValue)
 	}
 
-	stsRequest.Sign()
+	err = stsRequest.Sign()
+	if err != nil {
+		return nil, err
+	}
 
 	// Now extract out the relevant parts of the request
 	headersJson, err := json.Marshal(stsRequest.HTTPRequest.Header)
@@ -141,6 +144,9 @@ func formatSignedEntityRequest(svc *sts.STS, in *LoginInput) (*request.Request, 
 		req.HTTPRequest.Header.Add(in.ServerIDHeaderName, in.ServerIDHeaderValue)
 	}
 
-	req.Sign()
+	err = req.Sign()
+	if err != nil {
+		return nil, err
+	}
 	return req, nil
 }
