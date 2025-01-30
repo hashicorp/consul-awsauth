@@ -491,5 +491,5 @@ func TestBuildHttpRequest(t *testing.T) {
 	req, err := buildHttpRequest("POST", "https://iam.amazonaws.com/", &url.URL{}, "", http.Header{})
 	require.NoError(t, err)
 	assert.Equal(t, "POST", req.Method)
-	assert.Equal(t, "https://iam.amazonaws.com", req.URL.String())
+	assert.Equal(t, "https://iam.amazonaws.com/", req.URL.String())
 }
