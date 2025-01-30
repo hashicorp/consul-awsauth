@@ -161,10 +161,10 @@ func (t *BearerToken) validateSTSHostname() error {
 // either matches the admin configured IAMEndpoint or, if IAMEndpoint is not set,
 // that the URL matches a known Amazon AWS hostname for the IAM service, one of:
 //
-//	iam.amazonaws.com
-//	iam.*.amazonaws.com
-//	iam-fips.amazonaws.com
-//	iam-fips.*.amazonaws.com
+//    iam.amazonaws.com
+//    iam.*.amazonaws.com
+//    iam-fips.amazonaws.com
+//    iam-fips.*.amazonaws.com
 //
 // See https://docs.aws.amazon.com/general/latest/gr/iam-service.html
 func (t *BearerToken) validateIAMHostname() error {
@@ -228,10 +228,9 @@ func (t *BearerToken) validateIAMEntityBody() (string, error) {
 // It returns the parsed values, or an error if there are unexpected fields based on allowedValues.
 //
 // A key-value pair in the body is allowed if:
-//   - It is a single value (i.e. no bodies like 'Action=1&Action=2')
-//   - allowedValues[key] is an empty slice or nil (any value is allowed for the key)
-//   - allowedValues[key] is non-empty and contains the exact value
-//
+//  - It is a single value (i.e. no bodies like 'Action=1&Action=2')
+//  - allowedValues[key] is an empty slice or nil (any value is allowed for the key)
+//  - allowedValues[key] is non-empty and contains the exact value
 // This always requires an 'Action' field is present and non-empty.
 func parseRequestBody(body string, allowedValues url.Values) (url.Values, error) {
 	qs, err := url.ParseQuery(body)
