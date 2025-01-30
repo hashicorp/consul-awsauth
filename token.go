@@ -396,7 +396,11 @@ func buildHttpRequest(method, endpoint string, parsedUrl *url.URL, body string, 
 	if err != nil {
 		return nil, err
 	}
-	targetUrl.Path += parsedUrl.Path
+	joinedPath, err := url.JoinPath(targetUrl.Path, parsedUrl.Path)
+	if err != nil {
+		return nil, err
+	}
+	targetUrl.Path = joinedPath
 	targetUrl.RawQuery = parsedUrl.RawQuery
 
 	request, err := http.NewRequest(method, targetUrl.String(), strings.NewReader(body))
