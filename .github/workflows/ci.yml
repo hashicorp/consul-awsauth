@@ -4,9 +4,9 @@ on:
     branches: '**'
 
 env:
-  GO_VERSION: '1.18'
+  GO_VERSION: '1.22'
   TEST_RESULTS_DIR: /tmp/test-results
-  GOTESTSUM_VERSION: '1.8.1'
+  GOTESTSUM_VERSION: '1.10.1'
 
 jobs:
   lint:
