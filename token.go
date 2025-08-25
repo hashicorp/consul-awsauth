@@ -107,6 +107,11 @@ func NewBearerToken(loginToken string, config *Config) (*BearerToken, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		if err := token.validateIAMEntityQueryParams(); err != nil {
+			return nil, err
+		}
+
 		token.entityRequestType = reqType
 	}
 	return token, nil
@@ -123,6 +128,9 @@ func (t *BearerToken) validate() error {
 	if err := t.validateGetCallerIdentityBody(); err != nil {
 		return err
 	}
+	if err := t.validateGetCallerIdentityQueryParams(); err != nil {
+		return err
+	}
 	if err := t.validateAllowedSTSHeaderValues(); err != nil {
 		return err
 	}
@@ -133,10 +141,10 @@ func (t *BearerToken) validate() error {
 // either matches the admin configured STSEndpoint or, if STSEndpoint is not set,
 // that the URL matches a known Amazon AWS hostname for the STS service, one of:
 //
-//    sts.amazonaws.com
-//    sts.*.amazonaws.com
-//    sts-fips.amazonaws.com
-//    sts-fips.*.amazonaws.com
+//	sts.amazonaws.com
+//	sts.*.amazonaws.com
+//	sts-fips.amazonaws.com
+//	sts-fips.*.amazonaws.com
 //
 // See https://docs.aws.amazon.com/general/latest/gr/sts.html
 func (t *BearerToken) validateSTSHostname() error {
@@ -161,10 +169,10 @@ func (t *BearerToken) validateSTSHostname() error {
 // either matches the admin configured IAMEndpoint or, if IAMEndpoint is not set,
 // that the URL matches a known Amazon AWS hostname for the IAM service, one of:
 //
-//    iam.amazonaws.com
-//    iam.*.amazonaws.com
-//    iam-fips.amazonaws.com
-//    iam-fips.*.amazonaws.com
+//	iam.amazonaws.com
+//	iam.*.amazonaws.com
+//	iam-fips.amazonaws.com
+//	iam-fips.*.amazonaws.com
 //
 // See https://docs.aws.amazon.com/general/latest/gr/iam-service.html
 func (t *BearerToken) validateIAMHostname() error {
@@ -224,13 +232,45 @@ func (t *BearerToken) validateIAMEntityBody() (string, error) {
 	return "", fmt.Errorf("iam_request_headers[%q] error: invalid request body %q", t.config.GetEntityBodyHeader, t.getIAMEntityBody)
 }
 
+// validateGetCallerIdentityQueryParams validates that URL contains no query parameters
+// to prevent bypass attacks where an attacker puts valid parameters in the request body
+// but malicious ones in URL parameters. AWS STS will use URL parameters over body parameters.
+func (t *BearerToken) validateGetCallerIdentityQueryParams() error {
+	if t.parsedCallerIdentityURL == nil {
+		return nil
+	}
+
+	// Reject any URL with query parameters to prevent parameter injection attacks
+	if t.parsedCallerIdentityURL.RawQuery != "" {
+		return fmt.Errorf("URL query parameters are not allowed for security reasons: found %q", t.parsedCallerIdentityURL.RawQuery)
+	}
+
+	return nil
+}
+
+// validateIAMEntityQueryParams validates that IAM entity URL contains no query parameters
+// to prevent bypass attacks where an attacker could inject malicious parameters.
+func (t *BearerToken) validateIAMEntityQueryParams() error {
+	if t.parsedIAMEntityURL == nil {
+		return nil
+	}
+
+	// Reject any URL with query parameters to prevent parameter injection attacks
+	if t.parsedIAMEntityURL.RawQuery != "" {
+		return fmt.Errorf("URL query parameters are not allowed for IAM entity requests: found %q", t.parsedIAMEntityURL.RawQuery)
+	}
+
+	return nil
+}
+
 // parseRequestBody parses the AWS STS or IAM request body, such as 'Action=GetRole&RoleName=my-role'.
 // It returns the parsed values, or an error if there are unexpected fields based on allowedValues.
 //
 // A key-value pair in the body is allowed if:
-//  - It is a single value (i.e. no bodies like 'Action=1&Action=2')
-//  - allowedValues[key] is an empty slice or nil (any value is allowed for the key)
-//  - allowedValues[key] is non-empty and contains the exact value
+//   - It is a single value (i.e. no bodies like 'Action=1&Action=2')
+//   - allowedValues[key] is an empty slice or nil (any value is allowed for the key)
+//   - allowedValues[key] is non-empty and contains the exact value
+//
 // This always requires an 'Action' field is present and non-empty.
 func parseRequestBody(body string, allowedValues url.Values) (url.Values, error) {
 	qs, err := url.ParseQuery(body)

@@ -4,11 +4,12 @@
 package iamauth
 
 import (
-	"github.com/stretchr/testify/assert"
+	"encoding/base64"
 	"net/http"
 	"net/url"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -491,4 +492,119 @@ func TestBuildHttpRequest(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "POST", req.Method)
 	assert.Equal(t, "https://iam.amazonaws.com/", req.URL.String())
+}
+
+// TestURLParameterBypassVulnerability tests that URL parameters cannot be used to bypass
+// request body validation for Action parameters
+func TestURLParameterBypassVulnerability(t *testing.T) {
+	config := &Config{}
+
+	cases := []struct {
+		name      string
+		tokenJSON string
+		expError  string
+	}{
+		{
+			name: "Any URL parameters should be rejected",
+			tokenJSON: `{
+				"iam_http_request_method": "POST",
+				"iam_request_url": "` + base64.StdEncoding.EncodeToString([]byte("https://sts.amazonaws.com/?Action=DecodeAuthorizationMessage")) + `",
+				"iam_request_headers": "` + base64.StdEncoding.EncodeToString([]byte("{}")) + `",
+				"iam_request_body": "` + base64.StdEncoding.EncodeToString([]byte("Action=GetCallerIdentity&Version=2011-06-15")) + `"
+			}`,
+			expError: `URL query parameters are not allowed for security reasons`,
+		},
+		{
+			name: "Multiple URL parameters should be rejected",
+			tokenJSON: `{
+				"iam_http_request_method": "POST",
+				"iam_request_url": "` + base64.StdEncoding.EncodeToString([]byte("https://sts.amazonaws.com/?Version=2020-06-15&Param=value")) + `",
+				"iam_request_headers": "` + base64.StdEncoding.EncodeToString([]byte("{}")) + `",
+				"iam_request_body": "` + base64.StdEncoding.EncodeToString([]byte("Action=GetCallerIdentity&Version=2011-06-15")) + `"
+			}`,
+			expError: `URL query parameters are not allowed for security reasons`,
+		},
+		{
+			name: "Even benign URL parameters should be rejected",
+			tokenJSON: `{
+				"iam_http_request_method": "POST",
+				"iam_request_url": "` + base64.StdEncoding.EncodeToString([]byte("https://sts.amazonaws.com/?foo=bar")) + `",
+				"iam_request_headers": "` + base64.StdEncoding.EncodeToString([]byte("{}")) + `",
+				"iam_request_body": "` + base64.StdEncoding.EncodeToString([]byte("Action=GetCallerIdentity&Version=2011-06-15")) + `"
+			}`,
+			expError: `URL query parameters are not allowed for security reasons`,
+		},
+		{
+			name: "Valid request without URL parameters should pass",
+			tokenJSON: `{
+				"iam_http_request_method": "POST",
+				"iam_request_url": "` + base64.StdEncoding.EncodeToString([]byte("https://sts.amazonaws.com/")) + `",
+				"iam_request_headers": "` + base64.StdEncoding.EncodeToString([]byte("{}")) + `",
+				"iam_request_body": "` + base64.StdEncoding.EncodeToString([]byte("Action=GetCallerIdentity&Version=2011-06-15")) + `"
+			}`,
+			expError: "",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := NewBearerToken(tc.tokenJSON, config)
+			if tc.expError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tc.expError)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+// TestIAMEntityURLParameterBypassVulnerability tests that URL parameters cannot be used
+// to bypass request body validation for IAM entity requests
+func TestIAMEntityURLParameterBypassVulnerability(t *testing.T) {
+	cases := []struct {
+		name     string
+		rawQuery string
+		expError string
+	}{
+		{
+			name:     "Any parameter should be rejected",
+			rawQuery: "Action=GetUser",
+			expError: `URL query parameters are not allowed for IAM entity requests`,
+		},
+		{
+			name:     "Multiple parameters should be rejected",
+			rawQuery: "RoleName=malicious-role&Version=2020-06-15",
+			expError: `URL query parameters are not allowed for IAM entity requests`,
+		},
+		{
+			name:     "Even benign parameters should be rejected",
+			rawQuery: "foo=bar&test=123",
+			expError: `URL query parameters are not allowed for IAM entity requests`,
+		},
+		{
+			name:     "Empty query should pass",
+			rawQuery: "",
+			expError: "",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			parsedURL, err := url.Parse("https://iam.amazonaws.com/?" + tc.rawQuery)
+			require.NoError(t, err)
+
+			token := &BearerToken{
+				parsedIAMEntityURL: parsedURL,
+			}
+
+			err = token.validateIAMEntityQueryParams()
+			if tc.expError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tc.expError)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
 }
