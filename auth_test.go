@@ -6,6 +6,8 @@ package iamauth
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+	"net/url"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -13,6 +15,7 @@ import (
 	"github.com/hashicorp/consul-awsauth/responses"
 	"github.com/hashicorp/consul-awsauth/responsestest"
 	"github.com/hashicorp/go-hclog"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -124,4 +127,123 @@ func setLoginInputHeaderNames(in *LoginInput) {
 	in.GetEntityURLHeader = "X-Test-URL"
 	in.GetEntityHeadersHeader = "X-Test-Headers"
 	in.GetEntityBodyHeader = "X-Test-Body"
+}
+
+func TestValidateHeaderValueWithRequest(t *testing.T) {
+	cases := map[string]struct {
+		req           *http.Request
+		headers       http.Header
+		headerName    string
+		requiredValue string
+		expError      string
+	}{
+		"valid header with authorization": {
+			headers: http.Header{
+				"X-Test-Header": []string{"expected-value"},
+				"Authorization": []string{"AWS4-HMAC-SHA256 Credential=..., SignedHeaders=host;x-test-header, Signature=..."},
+			},
+			headerName:    "X-Test-Header",
+			requiredValue: "expected-value",
+			expError:      "",
+		},
+		"missing required header": {
+			headers:       http.Header{},
+			headerName:    "X-Test-Header",
+			requiredValue: "expected-value",
+			expError:      `missing header "X-Test-Header"`,
+		},
+		"wrong header value": {
+			headers: http.Header{
+				"X-Test-Header": []string{"wrong-value"},
+				"Authorization": []string{"AWS4-HMAC-SHA256 Credential=..., SignedHeaders=host;x-test-header, Signature=..."},
+			},
+			headerName:    "X-Test-Header",
+			requiredValue: "expected-value",
+			expError:      `expected "expected-value" but got "wrong-value"`,
+		},
+		"header not signed": {
+			headers: http.Header{
+				"X-Test-Header": []string{"expected-value"},
+				"Authorization": []string{"AWS4-HMAC-SHA256 Credential=..., SignedHeaders=host;other-header, Signature=..."},
+			},
+			headerName:    "X-Test-Header",
+			requiredValue: "expected-value",
+			expError:      "header wasn't signed",
+		},
+		"missing authorization header": {
+			headers: http.Header{
+				"X-Test-Header": []string{"expected-value"},
+			},
+			headerName:    "X-Test-Header",
+			requiredValue: "expected-value",
+			expError:      "missing Authorization header",
+		},
+		"authorization via query params - any params rejected": {
+			req: &http.Request{
+				URL: &url.URL{RawQuery: "X-Amz-SignedHeaders=host%3Bx-test-header"},
+			},
+			headers: http.Header{
+				"X-Test-Header": []string{"expected-value"},
+			},
+			headerName:    "X-Test-Header",
+			requiredValue: "expected-value",
+			expError:      "URL query parameters are not allowed for header validation",
+		},
+		"any query params should be rejected": {
+			req: &http.Request{
+				URL: &url.URL{RawQuery: "foo=bar&test=123"},
+			},
+			headers: http.Header{
+				"X-Test-Header": []string{"expected-value"},
+			},
+			headerName:    "X-Test-Header",
+			requiredValue: "expected-value",
+			expError:      "URL query parameters are not allowed for header validation",
+		},
+		"authorization bypass attempt - algorithm in query": {
+			req: &http.Request{
+				URL: &url.URL{RawQuery: "X-Amz-Algorithm=AWS4-HMAC-SHA256"},
+			},
+			headers: http.Header{
+				"X-Test-Header": []string{"expected-value"},
+			},
+			headerName:    "X-Test-Header",
+			requiredValue: "expected-value",
+			expError:      "URL query parameters are not allowed for header validation",
+		},
+		"authorization bypass attempt - credential in query": {
+			req: &http.Request{
+				URL: &url.URL{RawQuery: "X-Amz-Credential=fake-credential"},
+			},
+			headers: http.Header{
+				"X-Test-Header": []string{"expected-value"},
+			},
+			headerName:    "X-Test-Header",
+			requiredValue: "expected-value",
+			expError:      "URL query parameters are not allowed for header validation",
+		},
+		"authorization bypass attempt - multiple auth params": {
+			req: &http.Request{
+				URL: &url.URL{RawQuery: "X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20220322T211103Z"},
+			},
+			headers: http.Header{
+				"X-Test-Header": []string{"expected-value"},
+			},
+			headerName:    "X-Test-Header",
+			requiredValue: "expected-value",
+			expError:      "URL query parameters are not allowed for header validation",
+		},
+	}
+
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			err := validateHeaderValueWithRequest(c.req, c.headers, c.headerName, c.requiredValue)
+			if c.expError != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), c.expError)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
 }

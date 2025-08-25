@@ -65,7 +65,7 @@ func (a *Authenticator) ValidateLogin(ctx context.Context, loginToken string) (*
 	}
 
 	if a.config.ServerIDHeaderValue != "" {
-		err := validateHeaderValue(req.Header, a.config.ServerIDHeaderName, a.config.ServerIDHeaderValue)
+		err := validateHeaderValueWithRequest(req, req.Header, a.config.ServerIDHeaderName, a.config.ServerIDHeaderValue)
 		if err != nil {
 			return nil, err
 		}
@@ -100,7 +100,7 @@ func (a *Authenticator) ValidateLogin(ctx context.Context, loginToken string) (*
 		}
 
 		if a.config.ServerIDHeaderValue != "" {
-			err := validateHeaderValue(iamReq.Header, a.config.ServerIDHeaderName, a.config.ServerIDHeaderValue)
+			err := validateHeaderValueWithRequest(iamReq, iamReq.Header, a.config.ServerIDHeaderName, a.config.ServerIDHeaderValue)
 			if err != nil {
 				return nil, err
 			}
@@ -265,8 +265,9 @@ func parseGetIAMEntityResponse(response string, reqType string) (responses.IAMEn
 	return nil, fmt.Errorf("invalid %s request: %s", reqType, response)
 }
 
-// https://github.com/hashicorp/vault/blob/b17e3256dde937a6248c9a2fa56206aac93d07de/builtin/credential/aws/path_login.go#L1532
-func validateHeaderValue(headers http.Header, headerName string, requiredHeaderValue string) error {
+// validateHeaderValueWithRequest validates that a header has the expected value and is properly signed.
+// It checks both Authorization headers and URL query parameters for authorization information to prevent bypasses.
+func validateHeaderValueWithRequest(req *http.Request, headers http.Header, headerName string, requiredHeaderValue string) error {
 	providedValue := ""
 	for k, v := range headers {
 		if strings.EqualFold(headerName, k) {
@@ -283,6 +284,7 @@ func validateHeaderValue(headers http.Header, headerName string, requiredHeaderV
 		return fmt.Errorf("expected %q but got %q", requiredHeaderValue, providedValue)
 	}
 
+	// Check for authorization in headers first
 	if authzHeaders, ok := headers["Authorization"]; ok {
 		// authzHeader looks like AWS4-HMAC-SHA256 Credential=AKI..., SignedHeaders=host;x-amz-date;x-vault-awsiam-id, Signature=...
 		// We need to extract out the SignedHeaders
@@ -298,8 +300,15 @@ func validateHeaderValue(headers http.Header, headerName string, requiredHeaderV
 		signedHeaders := string(matches[1])
 		return ensureHeaderIsSigned(signedHeaders, headerName)
 	}
-	// NOTE: If we support GET requests, then we need to parse the X-Amz-SignedHeaders
-	// argument out of the query string and search in there for the header value
+
+	// Reject any URL query parameters for security reasons
+	// This prevents parameter injection attacks where an attacker could override validation
+	// NOTE: If we support GET requests in the future, we would need to parse the X-Amz-SignedHeaders
+	// argument out of the query string, but for security we currently reject all query parameters.
+	if req != nil && req.URL != nil && req.URL.RawQuery != "" {
+		return fmt.Errorf("URL query parameters are not allowed for header validation: found %q", req.URL.RawQuery)
+	}
+
 	return fmt.Errorf("missing Authorization header")
 }
 
