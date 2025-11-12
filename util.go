@@ -4,24 +4,25 @@
 package iamauth
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
+	"net/http"
+	"net/url"
+	"strings"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/signer/v4"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/hashicorp/consul-awsauth/responses"
 	"github.com/hashicorp/go-hclog"
 )
 
 type LoginInput struct {
-	Creds            *credentials.Credentials
+	Creds            aws.CredentialsProvider
 	IncludeIAMEntity bool
 	STSEndpoint      string
 	STSRegion        string
@@ -38,113 +39,175 @@ type LoginInput struct {
 }
 
 // GenerateLoginData populates the necessary data to send for the bearer token.
-// https://github.com/hashicorp/go-secure-stdlib/blob/main/awsutil/generate_credentials.go#L232-L301
+// Updated for AWS SDK v2 from https://github.com/hashicorp/go-secure-stdlib/blob/main/awsutil/generate_credentials.go#L232-L301
 func GenerateLoginData(in *LoginInput) (map[string]interface{}, error) {
+	ctx := context.Background()
+	
 	cfg := aws.Config{
 		Credentials: in.Creds,
-		// These are empty strings by default (i.e. not enabled)
-		Region:              aws.String(in.STSRegion),
-		Endpoint:            aws.String(in.STSEndpoint),
-		STSRegionalEndpoint: endpoints.RegionalSTSEndpoint,
+		Region:      in.STSRegion,
+	}
+	
+	// Set custom endpoint if provided
+	if in.STSEndpoint != "" {
+		cfg.EndpointResolver = aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
+			if service == sts.ServiceID {
+				return aws.Endpoint{URL: in.STSEndpoint}, nil
+			}
+			return aws.Endpoint{}, &aws.EndpointNotFoundError{}
+		})
 	}
 
-	stsSession, err := session.NewSessionWithOptions(session.Options{Config: cfg})
+	stsClient := sts.NewFromConfig(cfg)
+
+	// Create a GetCallerIdentity request
+	callerReq, err := createSignedGetCallerIdentityRequest(ctx, stsClient, in)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := sts.New(stsSession)
-	stsRequest, _ := svc.GetCallerIdentityRequest(nil)
-
-	// Include the iam:GetRole or iam:GetUser request in headers.
+	// Include the iam:GetRole or iam:GetUser request in headers if requested
 	if in.IncludeIAMEntity {
-		entityRequest, err := formatSignedEntityRequest(svc, in)
+		entityRequest, err := createSignedEntityRequest(ctx, stsClient, cfg, in)
 		if err != nil {
 			return nil, err
 		}
 
-		headersJson, err := json.Marshal(entityRequest.HTTPRequest.Header)
+		headersJson, err := json.Marshal(entityRequest.Header)
 		if err != nil {
 			return nil, err
 		}
-		requestBody, err := ioutil.ReadAll(entityRequest.HTTPRequest.Body)
+		requestBody, err := io.ReadAll(entityRequest.Body)
 		if err != nil {
 			return nil, err
 		}
 
-		stsRequest.HTTPRequest.Header.Add(in.GetEntityMethodHeader, entityRequest.HTTPRequest.Method)
-		stsRequest.HTTPRequest.Header.Add(in.GetEntityURLHeader, entityRequest.HTTPRequest.URL.String())
-		stsRequest.HTTPRequest.Header.Add(in.GetEntityHeadersHeader, string(headersJson))
-		stsRequest.HTTPRequest.Header.Add(in.GetEntityBodyHeader, string(requestBody))
+		callerReq.Header.Set(in.GetEntityMethodHeader, entityRequest.Method)
+		callerReq.Header.Set(in.GetEntityURLHeader, entityRequest.URL.String())
+		callerReq.Header.Set(in.GetEntityHeadersHeader, string(headersJson))
+		callerReq.Header.Set(in.GetEntityBodyHeader, string(requestBody))
 	}
 
-	// Inject the required auth header value, if supplied, and then sign the request including that header
-	if in.ServerIDHeaderValue != "" {
-		stsRequest.HTTPRequest.Header.Add(in.ServerIDHeaderName, in.ServerIDHeaderValue)
-	}
-
-	err = stsRequest.Sign()
+	// Extract the relevant parts of the request
+	headersJson, err := json.Marshal(callerReq.Header)
 	if err != nil {
 		return nil, err
 	}
-
-	// Now extract out the relevant parts of the request
-	headersJson, err := json.Marshal(stsRequest.HTTPRequest.Header)
-	if err != nil {
-		return nil, err
-	}
-	requestBody, err := ioutil.ReadAll(stsRequest.HTTPRequest.Body)
+	requestBody, err := io.ReadAll(callerReq.Body)
 	if err != nil {
 		return nil, err
 	}
 
 	return map[string]interface{}{
-		"iam_http_request_method": stsRequest.HTTPRequest.Method,
-		"iam_request_url":         base64.StdEncoding.EncodeToString([]byte(stsRequest.HTTPRequest.URL.String())),
+		"iam_http_request_method": callerReq.Method,
+		"iam_request_url":         base64.StdEncoding.EncodeToString([]byte(callerReq.URL.String())),
 		"iam_request_headers":     base64.StdEncoding.EncodeToString(headersJson),
 		"iam_request_body":        base64.StdEncoding.EncodeToString(requestBody),
 	}, nil
 }
 
-func formatSignedEntityRequest(svc *sts.STS, in *LoginInput) (*request.Request, error) {
-	// We need to retrieve the IAM user or role for the iam:GetRole or iam:GetUser request.
-	// GetCallerIdentity returns this and requires no permissions.
-	resp, err := svc.GetCallerIdentity(nil)
+func createSignedGetCallerIdentityRequest(ctx context.Context, stsClient *sts.Client, in *LoginInput) (*http.Request, error) {
+	// Determine endpoint
+	endpoint := "https://sts.amazonaws.com/"
+	if in.STSEndpoint != "" {
+		endpoint = in.STSEndpoint
+	}
+	if !strings.HasSuffix(endpoint, "/") {
+		endpoint += "/"
+	}
+	
+	// Create form data for STS GetCallerIdentity
+	formData := url.Values{
+		"Action":  []string{"GetCallerIdentity"},
+		"Version": []string{"2011-06-15"},
+	}
+	
+	body := strings.NewReader(formData.Encode())
+	
+	// Create HTTP request
+	req, err := http.NewRequestWithContext(ctx, "POST", endpoint, body)
+	if err != nil {
+		return nil, err
+	}
+	
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
+	
+	// Add custom headers if needed
+	if in.ServerIDHeaderValue != "" && in.ServerIDHeaderName != "" {
+		req.Header.Set(in.ServerIDHeaderName, in.ServerIDHeaderValue)
+	}
+	
+	// Get credentials and sign the request
+	creds, err := in.Creds.Retrieve(ctx)
+	if err != nil {
+		return nil, err
+	}
+	
+	signer := v4.NewSigner()
+	err = signer.SignHTTP(ctx, creds, req, "", "sts", in.STSRegion, time.Now())
+	if err != nil {
+		return nil, err
+	}
+	
+	return req, nil
+}
+
+func createSignedEntityRequest(ctx context.Context, stsClient *sts.Client, cfg aws.Config, in *LoginInput) (*http.Request, error) {
+	// First, get caller identity to determine the entity type
+	callerResp, err := stsClient.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
 	if err != nil {
 		return nil, err
 	}
 
-	arn, err := responses.ParseArn(*resp.Arn)
+	arn, err := responses.ParseArn(*callerResp.Arn)
 	if err != nil {
 		return nil, err
 	}
 
-	iamSession, err := session.NewSessionWithOptions(session.Options{
-		Config: aws.Config{
-			Credentials: svc.Config.Credentials,
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-	iamSvc := iam.New(iamSession)
-
-	var req *request.Request
+	// Create IAM request endpoint
+	endpoint := "https://iam.amazonaws.com/"
+	
+	var formData url.Values
 	switch arn.Type {
 	case "role", "assumed-role":
-		req, _ = iamSvc.GetRoleRequest(&iam.GetRoleInput{RoleName: &arn.FriendlyName})
+		formData = url.Values{
+			"Action":   []string{"GetRole"},
+			"RoleName": []string{arn.FriendlyName},
+			"Version":  []string{"2010-05-08"},
+		}
 	case "user":
-		req, _ = iamSvc.GetUserRequest(&iam.GetUserInput{UserName: &arn.FriendlyName})
+		formData = url.Values{
+			"Action":   []string{"GetUser"},
+			"UserName": []string{arn.FriendlyName},
+			"Version":  []string{"2010-05-08"},
+		}
 	default:
 		return nil, fmt.Errorf("entity %s is not an IAM role or IAM user", arn.Type)
 	}
-
-	// Inject the required auth header value, if supplied, and then sign the request including that header
-	if in.ServerIDHeaderValue != "" {
-		req.HTTPRequest.Header.Add(in.ServerIDHeaderName, in.ServerIDHeaderValue)
+	
+	body := strings.NewReader(formData.Encode())
+	
+	// Create HTTP request
+	req, err := http.NewRequestWithContext(ctx, "POST", endpoint, body)
+	if err != nil {
+		return nil, err
 	}
-
-	err = req.Sign()
+	
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
+	
+	// Add custom headers if needed
+	if in.ServerIDHeaderValue != "" && in.ServerIDHeaderName != "" {
+		req.Header.Set(in.ServerIDHeaderName, in.ServerIDHeaderValue)
+	}
+	
+	// Get credentials and sign the request
+	creds, err := cfg.Credentials.Retrieve(ctx)
+	if err != nil {
+		return nil, err
+	}
+	
+	signer := v4.NewSigner()
+	err = signer.SignHTTP(ctx, creds, req, "", "iam", cfg.Region, time.Now())
 	if err != nil {
 		return nil, err
 	}

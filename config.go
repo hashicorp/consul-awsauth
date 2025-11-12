@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	awsArn "github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/hashicorp/consul-awsauth/responses"
 )
 
 type Config struct {
@@ -43,9 +43,7 @@ func (c *Config) Validate() error {
 			}
 		}
 
-		if parsed, err := awsArn.Parse(arn); err != nil {
-			return fmt.Errorf("Invalid principal ARN: %q", arn)
-		} else if parsed.Service != "iam" && parsed.Service != "sts" {
+		if _, err := responses.ParseArn(arn); err != nil {
 			return fmt.Errorf("Invalid principal ARN: %q", arn)
 		}
 	}
