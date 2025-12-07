@@ -9,13 +9,25 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	// "github.com/aws/aws-sdk-go/aws"
+	// "github.com/aws/aws-sdk-go/aws/credentials"
+	// "github.com/aws/aws-sdk-go/aws/endpoints"
+	// "github.com/aws/aws-sdk-go/aws/request"
+	// "github.com/aws/aws-sdk-go/aws/session"
+	// "github.com/aws/aws-sdk-go/service/iam"
+	// "github.com/aws/aws-sdk-go/service/sts"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/aws/aws-sdk-go/service/sts"
+
+	"context"
+
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
+
 	"github.com/hashicorp/consul-awsauth/responses"
 	"github.com/hashicorp/go-hclog"
 )
@@ -45,15 +57,14 @@ func GenerateLoginData(in *LoginInput) (map[string]interface{}, error) {
 		// These are empty strings by default (i.e. not enabled)
 		Region:              aws.String(in.STSRegion),
 		Endpoint:            aws.String(in.STSEndpoint),
-		STSRegionalEndpoint: endpoints.RegionalSTSEndpoint,
+		STSRegionalEndpoint: aws.RegionalSTSEndpoint,
 	}
 
-	stsSession, err := session.NewSessionWithOptions(session.Options{Config: cfg})
-	if err != nil {
-		return nil, err
-	}
+	cfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithSharedConfigProfile("my-application-profile"),
+	)
 
-	svc := sts.New(stsSession)
+	svc := sts.New(cfg)
 	stsRequest, _ := svc.GetCallerIdentityRequest(nil)
 
 	// Include the iam:GetRole or iam:GetUser request in headers.

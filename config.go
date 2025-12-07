@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"strings"
 
-	awsArn "github.com/aws/aws-sdk-go/aws/arn"
+	//awsArn "github.com/aws/aws-sdk-go/aws/arn"
+	awsArn "github.com/aws/aws-sdk-go-v2/aws/arn"
+	//"github.com/aws/aws-sdk-go-v2
 )
 
 type Config struct {
