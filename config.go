@@ -6,7 +6,6 @@ package iamauth
 import (
 	"fmt"
 	"strings"
-
 	awsArn "github.com/aws/aws-sdk-go-v2/aws/arn"
 )
 

@@ -9,13 +9,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-
+	"io/ioutil"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"context"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
-	"github.com/aws/smithy-go/middleware"
-	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/hashicorp/consul-awsauth/responses"
 	"github.com/hashicorp/go-hclog"
 )
@@ -47,17 +49,24 @@ func GenerateLoginData(in *LoginInput) (map[string]interface{}, error) {
 	// Build AWS config from credentials provider
 	cfg := aws.Config{
 		Credentials: in.Creds,
+		// These are empty strings by default (i.e. not enabled)
+		Region:              aws.String(in.STSRegion),
+		Endpoint:            aws.String(in.STSEndpoint),
+		STSRegionalEndpoint: aws.RegionalSTSEndpoint,
 	}
 
-	// Set region if provided (required for IAM operations)
-	if in.STSRegion != "" {
-		cfg.Region = in.STSRegion
-	}
+	cfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithSharedConfigProfile("my-application-profile"),
+	)
 
-	// Configure the STS client with region and endpoint overrides if provided
-	stsClient := sts.NewFromConfig(cfg, func(o *sts.Options) {
-		if in.STSRegion != "" {
-			o.Region = in.STSRegion
+	svc := sts.New(cfg)
+	stsRequest, _ := svc.GetCallerIdentityRequest(nil)
+
+	// Include the iam:GetRole or iam:GetUser request in headers.
+	if in.IncludeIAMEntity {
+		entityRequest, err := formatSignedEntityRequest(svc, in)
+		if err != nil {
+			return nil, err
 		}
 		if in.STSEndpoint != "" {
 			o.BaseEndpoint = aws.String(in.STSEndpoint)
