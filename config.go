@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	awsArn "github.com/aws/aws-sdk-go/aws/arn"
+	awsArn "github.com/aws/aws-sdk-go-v2/aws/arn"
 )
 
 type Config struct {
@@ -33,20 +33,20 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("BoundIAMPrincipalARNs is required and must have at least 1 entry")
 	}
 
-	for _, arn := range c.BoundIAMPrincipalARNs {
-		if n := strings.Count(arn, "*"); n > 0 {
+	for _, principalArn := range c.BoundIAMPrincipalARNs {
+		if n := strings.Count(principalArn, "*"); n > 0 {
 			if !c.EnableIAMEntityDetails {
 				return fmt.Errorf("Must set EnableIAMEntityDetails=true to use wildcards in BoundIAMPrincipalARNs")
 			}
-			if n != 1 || !strings.HasSuffix(arn, "*") {
+			if n != 1 || !strings.HasSuffix(principalArn, "*") {
 				return fmt.Errorf("Only one wildcard is allowed at the end of the bound IAM principal ARN")
 			}
 		}
 
-		if parsed, err := awsArn.Parse(arn); err != nil {
-			return fmt.Errorf("Invalid principal ARN: %q", arn)
+		if parsed, err := awsArn.Parse(principalArn); err != nil {
+			return fmt.Errorf("Invalid principal ARN: %q", principalArn)
 		} else if parsed.Service != "iam" && parsed.Service != "sts" {
-			return fmt.Errorf("Invalid principal ARN: %q", arn)
+			return fmt.Errorf("Invalid principal ARN: %q", principalArn)
 		}
 	}
 

@@ -10,7 +10,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/hashicorp/consul-awsauth/iamauthtest"
 	"github.com/hashicorp/consul-awsauth/responses"
 	"github.com/hashicorp/consul-awsauth/responsestest"
@@ -95,7 +95,7 @@ func TestValidateLogin(t *testing.T) {
 			auth := &Authenticator{config: c.config, logger: logger}
 
 			loginInput := &LoginInput{
-				Creds:               credentials.NewStaticCredentials("fake", "fake", ""),
+				Creds:               credentials.NewStaticCredentialsProvider("fake", "fake", ""),
 				IncludeIAMEntity:    c.config.EnableIAMEntityDetails,
 				STSEndpoint:         c.config.STSEndpoint,
 				STSRegion:           "fake-region",
