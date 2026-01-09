@@ -6,6 +6,7 @@ package iamauth
 import (
 	"fmt"
 	"strings"
+
 	awsArn "github.com/aws/aws-sdk-go-v2/aws/arn"
 )
 
@@ -50,7 +51,7 @@ func (c *Config) Validate() error {
 	}
 
 	if len(c.IAMEntityTags) > 0 && !c.EnableIAMEntityDetails {
-		return fmt.Errorf("Must set EnableIAMEntityDetails=true to use IAMUserTags")
+		return fmt.Errorf("Must set EnableIAMEntityDetails=true to use IAMEntityTags")
 	}
 
 	// If server id header checking is enabled, we need the header name.

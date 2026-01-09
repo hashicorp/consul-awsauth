@@ -27,7 +27,7 @@ func TestConfigValidate(t *testing.T) {
 			},
 		},
 		"entity tags require entity details": {
-			expError: "Must set EnableIAMEntityDetails=true to use IAMUserTags",
+			expError: "Must set EnableIAMEntityDetails=true to use IAMEntityTags",
 			configs: []Config{
 				{
 					BoundIAMPrincipalARNs:  []string{principalArn},
