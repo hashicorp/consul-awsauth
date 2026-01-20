@@ -4,9 +4,7 @@ This contains the implementation for Consul's AWS IAM auth method.
 
 ## AWS SDK v2 Migration
 
-This library has been **migrated from AWS SDK for Go v1 to AWS SDK for Go v2**.
-Reference document : https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/migrate-gosdk.html
-
+This library in the repository has been **migrated from AWS SDK for Go v1 to AWS SDK for Go v2**.
 
 ### Migration Resources
 
