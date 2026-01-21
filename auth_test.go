@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"testing"
+
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/hashicorp/consul-awsauth/iamauthtest"
 	"github.com/hashicorp/consul-awsauth/responses"
