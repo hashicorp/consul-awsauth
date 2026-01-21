@@ -24,8 +24,7 @@ jobs:
         args: |
           --verbose
         only-new-issues: false
-        skip-pkg-cache: true
-        skip-build-cache: true
+        skip-cache: true
 
   test:
     runs-on: ubuntu-latest

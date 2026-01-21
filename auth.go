@@ -200,7 +200,11 @@ func (a *Authenticator) submitRequest(ctx context.Context, req *http.Request) (s
 		return "", fmt.Errorf("error making request: %w", err)
 	}
 	if response != nil {
-		defer response.Body.Close()
+		defer func() {
+			if err := response.Body.Close(); err != nil {
+				// handle or log error
+			}
+		}()
 	}
 	// Validate that the response type is XML
 	if ct := response.Header.Get("Content-Type"); ct != "text/xml" {

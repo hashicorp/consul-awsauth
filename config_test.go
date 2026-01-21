@@ -4,7 +4,6 @@
 package iamauth
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -95,7 +94,7 @@ func TestConfigValidate(t *testing.T) {
 			},
 		},
 		"invalid principal arns are disallowed": {
-			expError: fmt.Sprintf("Invalid principal ARN"),
+			expError: "Invalid principal ARN",
 			configs: []Config{
 				{BoundIAMPrincipalARNs: []string{""}},
 				{BoundIAMPrincipalARNs: []string{"  "}},
