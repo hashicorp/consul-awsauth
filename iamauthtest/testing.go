@@ -64,19 +64,15 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func writeXML(w http.ResponseWriter, val interface{}) {
-	xmlData, err := xml.MarshalIndent(val, "", " ")
+	str, err := xml.MarshalIndent(val, "", " ")
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		if _, err := fmt.Fprint(w, err.Error()); err != nil {
-			// handle or log error
-		}
+		fmt.Fprint(w, err.Error())
 		return
 	}
 	w.Header().Add("Content-Type", "text/xml")
 	w.WriteHeader(http.StatusOK)
-	if _, err := fmt.Fprint(w, string(xmlData)); err != nil {
-		// handle or log error
-	}
+	fmt.Fprint(w, string(str))
 }
 
 func writeError(w http.ResponseWriter, code int, r *http.Request) {

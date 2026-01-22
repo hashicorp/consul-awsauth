@@ -36,34 +36,34 @@ func (c *Config) Validate() error {
 	for _, principalArn := range c.BoundIAMPrincipalARNs {
 		if n := strings.Count(principalArn, "*"); n > 0 {
 			if !c.EnableIAMEntityDetails {
-				return fmt.Errorf("Must set EnableIAMEntityDetails=true to use wildcards in BoundIAMPrincipalARNs")
+				return fmt.Errorf("must set EnableIAMEntityDetails=true to use wildcards in BoundIAMPrincipalARNs")
 			}
 			if n != 1 || !strings.HasSuffix(principalArn, "*") {
-				return fmt.Errorf("Only one wildcard is allowed at the end of the bound IAM principal ARN")
+				return fmt.Errorf("only one wildcard is allowed at the end of the bound IAM principal ARN")
 			}
 		}
 
 		if parsed, err := awsArn.Parse(principalArn); err != nil {
-			return fmt.Errorf("Invalid principal ARN: %q", principalArn)
+			return fmt.Errorf("invalid principal ARN: %q", principalArn)
 		} else if parsed.Service != "iam" && parsed.Service != "sts" {
-			return fmt.Errorf("Invalid principal ARN: %q", principalArn)
+			return fmt.Errorf("invalid principal ARN: %q", principalArn)
 		}
 	}
 
 	if len(c.IAMEntityTags) > 0 && !c.EnableIAMEntityDetails {
-		return fmt.Errorf("Must set EnableIAMEntityDetails=true to use IAMEntityTags")
+		return fmt.Errorf("must set EnableIAMEntityDetails=true to use IAMEntityTags")
 	}
 
 	// If server id header checking is enabled, we need the header name.
 	if c.ServerIDHeaderValue != "" && c.ServerIDHeaderName == "" {
-		return fmt.Errorf("Must set ServerIDHeaderName to use a server ID value")
+		return fmt.Errorf("must set ServerIDHeaderName to use a server ID value")
 	}
 
 	if c.EnableIAMEntityDetails && (c.GetEntityBodyHeader == "" ||
 		c.GetEntityHeadersHeader == "" ||
 		c.GetEntityMethodHeader == "" ||
 		c.GetEntityURLHeader == "") {
-		return fmt.Errorf("Must set all of GetEntityMethodHeader, GetEntityURLHeader, " +
+		return fmt.Errorf("must set all of GetEntityMethodHeader, GetEntityURLHeader, " +
 			"GetEntityHeadersHeader, and GetEntityBodyHeader when EnableIAMEntityDetails=true")
 	}
 
