@@ -73,7 +73,7 @@ func TestConfigValidate(t *testing.T) {
 			},
 		},
 		"only one wildcard suffix is allowed": {
-			expError: "Only one wildcard is allowed at the end of the bound IAM principal ARN",
+			expError: "only one wildcard is allowed at the end of the bound IAM principal ARN",
 			configs: []Config{
 				{
 					BoundIAMPrincipalARNs:  []string{"arn:aws:iam::000000000000:role/**"},
