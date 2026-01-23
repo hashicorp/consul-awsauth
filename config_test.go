@@ -4,7 +4,6 @@
 package iamauth
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -27,7 +26,7 @@ func TestConfigValidate(t *testing.T) {
 			},
 		},
 		"entity tags require entity details": {
-			expError: "Must set EnableIAMEntityDetails=true to use IAMUserTags",
+			expError: "must set EnableIAMEntityDetails=true to use IAMEntityTags",
 			configs: []Config{
 				{
 					BoundIAMPrincipalARNs:  []string{principalArn},
@@ -37,7 +36,7 @@ func TestConfigValidate(t *testing.T) {
 			},
 		},
 		"entity details require all entity header names": {
-			expError: "Must set all of GetEntityMethodHeader, GetEntityURLHeader, " +
+			expError: "must set all of GetEntityMethodHeader, GetEntityURLHeader, " +
 				"GetEntityHeadersHeader, and GetEntityBodyHeader when EnableIAMEntityDetails=true",
 			configs: []Config{
 				{
@@ -67,14 +66,14 @@ func TestConfigValidate(t *testing.T) {
 			},
 		},
 		"wildcard principals require entity details": {
-			expError: "Must set EnableIAMEntityDetails=true to use wildcards in BoundIAMPrincipalARNs",
+			expError: "must set EnableIAMEntityDetails=true to use wildcards in BoundIAMPrincipalARNs",
 			configs: []Config{
 				{BoundIAMPrincipalARNs: []string{"arn:aws:iam::000000000000:role/*"}},
 				{BoundIAMPrincipalARNs: []string{"arn:aws:iam::000000000000:role/path/*"}},
 			},
 		},
 		"only one wildcard suffix is allowed": {
-			expError: "Only one wildcard is allowed at the end of the bound IAM principal ARN",
+			expError: "only one wildcard is allowed at the end of the bound IAM principal ARN",
 			configs: []Config{
 				{
 					BoundIAMPrincipalARNs:  []string{"arn:aws:iam::000000000000:role/**"},
@@ -95,7 +94,7 @@ func TestConfigValidate(t *testing.T) {
 			},
 		},
 		"invalid principal arns are disallowed": {
-			expError: fmt.Sprintf("Invalid principal ARN"),
+			expError: "invalid principal ARN",
 			configs: []Config{
 				{BoundIAMPrincipalARNs: []string{""}},
 				{BoundIAMPrincipalARNs: []string{"  "}},
@@ -117,7 +116,7 @@ func TestConfigValidate(t *testing.T) {
 			},
 		},
 		"server id header value requires service id header name": {
-			expError: "Must set ServerIDHeaderName to use a server ID value",
+			expError: "must set ServerIDHeaderName to use a server ID value",
 			configs: []Config{
 				{
 					BoundIAMPrincipalARNs: []string{principalArn},

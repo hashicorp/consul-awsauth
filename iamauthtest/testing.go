@@ -19,8 +19,9 @@ import (
 
 // NewTestServer returns a fake AWS API server for local tests:
 // It supports the following paths:
-//   /sts returns STS API responses
-//   /iam returns IAM API responses
+//
+//	/sts returns STS API responses
+//	/iam returns IAM API responses
 func NewTestServer(t *testing.T, s *Server) *httptest.Server {
 	server := httptest.NewUnstartedServer(s)
 	t.Cleanup(server.Close)
@@ -66,18 +67,18 @@ func writeXML(w http.ResponseWriter, val interface{}) {
 	str, err := xml.MarshalIndent(val, "", " ")
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, err.Error())
+		_, _ = fmt.Fprint(w, err.Error())
 		return
 	}
 	w.Header().Add("Content-Type", "text/xml")
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, string(str))
+	_, _ = fmt.Fprint(w, string(str))
 }
 
 func writeError(w http.ResponseWriter, code int, r *http.Request) {
 	w.WriteHeader(code)
 	msg := fmt.Sprintf("%s %s", r.Method, r.URL)
-	fmt.Fprintf(w, `<ErrorResponse xmlns="https://fakeaws/">
+	_, _ = fmt.Fprintf(w, `<ErrorResponse xmlns="https://fakeaws/">
   <Error>
 	<Message>Fake AWS Server Error: %s</Message>
   </Error>

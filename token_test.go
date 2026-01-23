@@ -396,7 +396,7 @@ var (
 	validBearerTokenJson = `{
   "iam_http_request_method":"POST",
   "iam_request_body":"QWN0aW9uPUdldENhbGxlcklkZW50aXR5JlZlcnNpb249MjAxMS0wNi0xNQ==",
-  "iam_request_headers":"eyJBdXRob3JpemF0aW9uIjpbIkFXUzQtSE1BQy1TSEEyNTYgQ3JlZGVudGlhbD1mYWtlLzIwMjIwMzIyL3VzLWVhc3QtMS9zdHMvYXdzNF9yZXF1ZXN0LCBTaWduZWRIZWFkZXJzPWNvbnRlbnQtbGVuZ3RoO2NvbnRlbnQtdHlwZTtob3N0O3gtYW16LWRhdGU7eC1hbXotc2VjdXJpdHktdG9rZW4sIFNpZ25hdHVyZT1lZmMzMjBiOTcyZDA3YjM4YjY1ZWIyNDI1NjgwNWUwMzE0OWRhNTg2ZDgwNGY4YzYzNjRjZTk4ZGViZTA4MGIxIl0sIkNvbnRlbnQtTGVuZ3RoIjpbIjQzIl0sIkNvbnRlbnQtVHlwZSI6WyJhcHBsaWNhdGlvbi94LXd3dy1mb3JtLXVybGVuY29kZWQ7IGNoYXJzZXQ9dXRmLTgiXSwiVXNlci1BZ2VudCI6WyJhd3Mtc2RrLWdvLzEuNDIuMzQgKGdvMS4xNy41OyBkYXJ3aW47IGFtZDY0KSJdLCJYLUFtei1EYXRlIjpbIjIwMjIwMzIyVDIxMTEwM1oiXSwiWC1BbXotU2VjdXJpdHktVG9rZW4iOlsiZmFrZSJdfQ==",
+  "iam_request_headers":"eyJBdXRob3JpemF0aW9uIjpbIkFXUzQtSE1BQy1TSEEyNTYgQ3JlZGVudGlhbD1mYWtlLzIwMjIwMzIyL3VzLWVhc3QtMS9zdHMvYXdzNF9yZXF1ZXN0LCBTaWduZWRIZWFkZXJzPWNvbnRlbnQtbGVuZ3RoO2NvbnRlbnQtdHlwZTtob3N0O3gtYW16LWRhdGU7eC1hbXotc2VjdXJpdHktdG9rZW4sIFNpZ25hdHVyZT1lZmMzMjBiOTcyZDA3YjM4YjY1ZWIyNDI1NjgwNWUwMzE0OWRhNTg2ZDgwNGY4YzYzNjRjZTk4ZGViZTA4MGIxIl0sIkNvbnRlbnQtTGVuZ3RoIjpbIjQzIl0sIkNvbnRlbnQtVHlwZSI6WyJhcHBsaWNhdGlvbi94LXd3dy1mb3JtLXVybGVuY29kZWQ7IGNoYXJzZXQ9dXRmLTgiXSwiVXNlci1BZ2VudCI6WyJhd3Mtc2RrLWdvLXYyLzEuMjEuMCAoZ28xLjIzLjA7IGRhcndpbjsgYW1kNjQpIl0sIlgtQW16LURhdGUiOlsiMjAyMjAzMjJUMjExMTAzWiJdLCJYLUFtei1TZWN1cml0eS1Ub2tlbiI6WyJmYWtlIl19",
   "iam_request_url":"aHR0cHM6Ly9zdHMuYW1hem9uYXdzLmNvbS8="
 }`
 
@@ -407,7 +407,7 @@ var (
 			"Authorization":        []string{"AWS4-HMAC-SHA256 Credential=fake/20220322/us-east-1/sts/aws4_request, SignedHeaders=content-length;content-type;host;x-amz-date;x-amz-security-token, Signature=efc320b972d07b38b65eb24256805e03149da586d804f8c6364ce98debe080b1"},
 			"Content-Length":       []string{"43"},
 			"Content-Type":         []string{"application/x-www-form-urlencoded; charset=utf-8"},
-			"User-Agent":           []string{"aws-sdk-go/1.42.34 (go1.17.5; darwin; amd64)"},
+			"User-Agent":           []string{"aws-sdk-go-v2/1.21.0 (go1.23.0; darwin; amd64)"},
 			"X-Amz-Date":           []string{"20220322T211103Z"},
 			"X-Amz-Security-Token": []string{"fake"},
 		},
@@ -419,7 +419,7 @@ var (
 		},
 	}
 
-	validBearerTokenWithRoleJson = `{"iam_http_request_method":"POST","iam_request_body":"QWN0aW9uPUdldENhbGxlcklkZW50aXR5JlZlcnNpb249MjAxMS0wNi0xNQ==","iam_request_headers":"eyJBdXRob3JpemF0aW9uIjpbIkFXUzQtSE1BQy1TSEEyNTYgQ3JlZGVudGlhbD1mYWtlLWtleS1pZC8yMDIyMDMyMi9mYWtlLXJlZ2lvbi9zdHMvYXdzNF9yZXF1ZXN0LCBTaWduZWRIZWFkZXJzPWNvbnRlbnQtbGVuZ3RoO2NvbnRlbnQtdHlwZTtob3N0O3gtYW16LWRhdGU7eC1jb25zdWwtaWFtLWdldGVudGl0eS1ib2R5O3gtY29uc3VsLWlhbS1nZXRlbnRpdHktaGVhZGVyczt4LWNvbnN1bC1pYW0tZ2V0ZW50aXR5LW1ldGhvZDt4LWNvbnN1bC1pYW0tZ2V0ZW50aXR5LXVybCwgU2lnbmF0dXJlPTU2MWFjMzFiNWFkMDFjMTI0YzU0YzE2OGY3NmVhNmJmZDY0NWI4ZWM1MzQ1ZjgzNTc3MjljOWFhMGI0NzEzMzciXSwiQ29udGVudC1MZW5ndGgiOlsiNDMiXSwiQ29udGVudC1UeXBlIjpbImFwcGxpY2F0aW9uL3gtd3d3LWZvcm0tdXJsZW5jb2RlZDsgY2hhcnNldD11dGYtOCJdLCJVc2VyLUFnZW50IjpbImF3cy1zZGstZ28vMS40Mi4zNCAoZ28xLjE3LjU7IGRhcndpbjsgYW1kNjQpIl0sIlgtQW16LURhdGUiOlsiMjAyMjAzMjJUMjI1NzQyWiJdLCJYLUNvbnN1bC1JYW0tR2V0ZW50aXR5LUJvZHkiOlsiQWN0aW9uPUdldFJvbGVcdTAwMjZSb2xlTmFtZT1teS1yb2xlXHUwMDI2VmVyc2lvbj0yMDEwLTA1LTA4Il0sIlgtQ29uc3VsLUlhbS1HZXRlbnRpdHktSGVhZGVycyI6WyJ7XCJBdXRob3JpemF0aW9uXCI6W1wiQVdTNC1ITUFDLVNIQTI1NiBDcmVkZW50aWFsPWZha2Uta2V5LWlkLzIwMjIwMzIyL3VzLWVhc3QtMS9pYW0vYXdzNF9yZXF1ZXN0LCBTaWduZWRIZWFkZXJzPWNvbnRlbnQtbGVuZ3RoO2NvbnRlbnQtdHlwZTtob3N0O3gtYW16LWRhdGUsIFNpZ25hdHVyZT1hYTJhMTlkMGEzMDVkNzRiYmQwMDk3NzZiY2E4ODBlNTNjZmE5OTFlNDgzZTQwMzk0NzE4MWE0MWNjNDgyOTQwXCJdLFwiQ29udGVudC1MZW5ndGhcIjpbXCI1MFwiXSxcIkNvbnRlbnQtVHlwZVwiOltcImFwcGxpY2F0aW9uL3gtd3d3LWZvcm0tdXJsZW5jb2RlZDsgY2hhcnNldD11dGYtOFwiXSxcIlVzZXItQWdlbnRcIjpbXCJhd3Mtc2RrLWdvLzEuNDIuMzQgKGdvMS4xNy41OyBkYXJ3aW47IGFtZDY0KVwiXSxcIlgtQW16LURhdGVcIjpbXCIyMDIyMDMyMlQyMjU3NDJaXCJdfSJdLCJYLUNvbnN1bC1JYW0tR2V0ZW50aXR5LU1ldGhvZCI6WyJQT1NUIl0sIlgtQ29uc3VsLUlhbS1HZXRlbnRpdHktVXJsIjpbImh0dHBzOi8vaWFtLmFtYXpvbmF3cy5jb20vIl19","iam_request_url":"aHR0cDovLzEyNy4wLjAuMTo2MzY5Ni9zdHMv"}`
+	validBearerTokenWithRoleJson = `{"iam_http_request_method":"POST","iam_request_body":"QWN0aW9uPUdldENhbGxlcklkZW50aXR5JlZlcnNpb249MjAxMS0wNi0xNQ==","iam_request_headers":"eyJBdXRob3JpemF0aW9uIjpbIkFXUzQtSE1BQy1TSEEyNTYgQ3JlZGVudGlhbD1mYWtlLWtleS1pZC8yMDIyMDMyMi9mYWtlLXJlZ2lvbi9zdHMvYXdzNF9yZXF1ZXN0LCBTaWduZWRIZWFkZXJzPWNvbnRlbnQtbGVuZ3RoO2NvbnRlbnQtdHlwZTtob3N0O3gtYW16LWRhdGU7eC1jb25zdWwtaWFtLWdldGVudGl0eS1ib2R5O3gtY29uc3VsLWlhbS1nZXRlbnRpdHktaGVhZGVyczt4LWNvbnN1bC1pYW0tZ2V0ZW50aXR5LW1ldGhvZDt4LWNvbnN1bC1pYW0tZ2V0ZW50aXR5LXVybCwgU2lnbmF0dXJlPTU2MWFjMzFiNWFkMDFjMTI0YzU0YzE2OGY3NmVhNmJmZDY0NWI4ZWM1MzQ1ZjgzNTc3MjljOWFhMGI0NzEzMzciXSwiQ29udGVudC1MZW5ndGgiOlsiNDMiXSwiQ29udGVudC1UeXBlIjpbImFwcGxpY2F0aW9uL3gtd3d3LWZvcm0tdXJsZW5jb2RlZDsgY2hhcnNldD11dGYtOCJdLCJVc2VyLUFnZW50IjpbImF3cy1zZGstZ28tdjIvMS4yMS4wIChnbzEuMjMuMDsgZGFyd2luOyBhbWQ2NCkiXSwiWC1BbXotRGF0ZSI6WyIyMDIyMDMyMlQyMjU3NDJaIl0sIlgtQ29uc3VsLUlhbS1HZXRlbnRpdHktQm9keSI6WyJBY3Rpb249R2V0Um9sZSZSb2xlTmFtZT1teS1yb2xlJlZlcnNpb249MjAxMC0wNS0wOCJdLCJYLUNvbnN1bC1JYW0tR2V0ZW50aXR5LUhlYWRlcnMiOlsie1wiQXV0aG9yaXphdGlvblwiOltcIkFXUzQtSE1BQy1TSEEyNTYgQ3JlZGVudGlhbD1mYWtlLWtleS1pZC8yMDIyMDMyMi91cy1lYXN0LTEvaWFtL2F3czRfcmVxdWVzdCwgU2lnbmVkSGVhZGVycz1jb250ZW50LWxlbmd0aDtjb250ZW50LXR5cGU7aG9zdDt4LWFtei1kYXRlLCBTaWduYXR1cmU9YWEyYTE5ZDBhMzA1ZDc0YmJkMDA5Nzc2YmNhODgwZTUzY2ZhOTkxZTQ4M2U0MDM5NDcxODFhNDFjYzQ4Mjk0MFwiXSxcIkNvbnRlbnQtTGVuZ3RoXCI6W1wiNTBcIl0sXCJDb250ZW50LVR5cGVcIjpbXCJhcHBsaWNhdGlvbi94LXd3dy1mb3JtLXVybGVuY29kZWQ7IGNoYXJzZXQ9dXRmLThcIl0sXCJVc2VyLUFnZW50XCI6W1wiYXdzLXNkay1nby12Mi8xLjIxLjAgKGdvMS4yMy4wOyBkYXJ3aW47IGFtZDY0KVwiXSxcIlgtQW16LURhdGVcIjpbXCIyMDIyMDMyMlQyMjU3NDJaXCJdfSJdLCJYLUNvbnN1bC1JYW0tR2V0ZW50aXR5LU1ldGhvZCI6WyJQT1NUIl0sIlgtQ29uc3VsLUlhbS1HZXRlbnRpdHktVXJsIjpbImh0dHBzOi8vaWFtLmFtYXpvbmF3cy5jb20vIl19","iam_request_url":"aHR0cDovLzEyNy4wLjAuMTo2MzY5Ni9zdHMv"}`
 
 	validBearerTokenWithRoleParsed = BearerToken{
 		getCallerIdentityMethod: "POST",
@@ -428,10 +428,10 @@ var (
 			"Authorization":                  []string{"AWS4-HMAC-SHA256 Credential=fake-key-id/20220322/fake-region/sts/aws4_request, SignedHeaders=content-length;content-type;host;x-amz-date;x-consul-iam-getentity-body;x-consul-iam-getentity-headers;x-consul-iam-getentity-method;x-consul-iam-getentity-url, Signature=561ac31b5ad01c124c54c168f76ea6bfd645b8ec5345f8357729c9aa0b471337"},
 			"Content-Length":                 []string{"43"},
 			"Content-Type":                   []string{"application/x-www-form-urlencoded; charset=utf-8"},
-			"User-Agent":                     []string{"aws-sdk-go/1.42.34 (go1.17.5; darwin; amd64)"},
+			"User-Agent":                     []string{"aws-sdk-go-v2/1.21.0 (go1.23.0; darwin; amd64)"},
 			"X-Amz-Date":                     []string{"20220322T225742Z"},
 			"X-Consul-Iam-Getentity-Body":    []string{"Action=GetRole&RoleName=my-role&Version=2010-05-08"},
-			"X-Consul-Iam-Getentity-Headers": []string{`{"Authorization":["AWS4-HMAC-SHA256 Credential=fake-key-id/20220322/us-east-1/iam/aws4_request, SignedHeaders=content-length;content-type;host;x-amz-date, Signature=aa2a19d0a305d74bbd009776bca880e53cfa991e483e403947181a41cc482940"],"Content-Length":["50"],"Content-Type":["application/x-www-form-urlencoded; charset=utf-8"],"User-Agent":["aws-sdk-go/1.42.34 (go1.17.5; darwin; amd64)"],"X-Amz-Date":["20220322T225742Z"]}`},
+			"X-Consul-Iam-Getentity-Headers": []string{`{"Authorization":["AWS4-HMAC-SHA256 Credential=fake-key-id/20220322/us-east-1/iam/aws4_request, SignedHeaders=content-length;content-type;host;x-amz-date, Signature=aa2a19d0a305d74bbd009776bca880e53cfa991e483e403947181a41cc482940"],"Content-Length":["50"],"Content-Type":["application/x-www-form-urlencoded; charset=utf-8"],"User-Agent":["aws-sdk-go-v2/1.21.0 (go1.23.0; darwin; amd64)"],"X-Amz-Date":["20220322T225742Z"]}`},
 			"X-Consul-Iam-Getentity-Method":  []string{"POST"},
 			"X-Consul-Iam-Getentity-Url":     []string{"https://iam.amazonaws.com/"},
 		},
@@ -444,7 +444,7 @@ var (
 			"Authorization":  []string{"AWS4-HMAC-SHA256 Credential=fake-key-id/20220322/us-east-1/iam/aws4_request, SignedHeaders=content-length;content-type;host;x-amz-date, Signature=aa2a19d0a305d74bbd009776bca880e53cfa991e483e403947181a41cc482940"},
 			"Content-Length": []string{"50"},
 			"Content-Type":   []string{"application/x-www-form-urlencoded; charset=utf-8"},
-			"User-Agent":     []string{"aws-sdk-go/1.42.34 (go1.17.5; darwin; amd64)"},
+			"User-Agent":     []string{"aws-sdk-go-v2/1.21.0 (go1.23.0; darwin; amd64)"},
 			"X-Amz-Date":     []string{"20220322T225742Z"},
 		},
 		getIAMEntityBody:  "Action=GetRole&RoleName=my-role&Version=2010-05-08",
@@ -507,41 +507,41 @@ func TestURLParameterBypassVulnerability(t *testing.T) {
 		{
 			name: "Any URL parameters should be rejected",
 			tokenJSON: `{
-				"iam_http_request_method": "POST",
-				"iam_request_url": "` + base64.StdEncoding.EncodeToString([]byte("https://sts.amazonaws.com/?Action=DecodeAuthorizationMessage")) + `",
-				"iam_request_headers": "` + base64.StdEncoding.EncodeToString([]byte("{}")) + `",
-				"iam_request_body": "` + base64.StdEncoding.EncodeToString([]byte("Action=GetCallerIdentity&Version=2011-06-15")) + `"
-			}`,
+                "iam_http_request_method": "POST",
+                "iam_request_url": "` + base64.StdEncoding.EncodeToString([]byte("https://sts.amazonaws.com/?Action=DecodeAuthorizationMessage")) + `",
+                "iam_request_headers": "` + base64.StdEncoding.EncodeToString([]byte("{}")) + `",
+                "iam_request_body": "` + base64.StdEncoding.EncodeToString([]byte("Action=GetCallerIdentity&Version=2011-06-15")) + `"
+            }`,
 			expError: `URL query parameters are not allowed for security reasons`,
 		},
 		{
 			name: "Multiple URL parameters should be rejected",
 			tokenJSON: `{
-				"iam_http_request_method": "POST",
-				"iam_request_url": "` + base64.StdEncoding.EncodeToString([]byte("https://sts.amazonaws.com/?Version=2020-06-15&Param=value")) + `",
-				"iam_request_headers": "` + base64.StdEncoding.EncodeToString([]byte("{}")) + `",
-				"iam_request_body": "` + base64.StdEncoding.EncodeToString([]byte("Action=GetCallerIdentity&Version=2011-06-15")) + `"
-			}`,
+                "iam_http_request_method": "POST",
+                "iam_request_url": "` + base64.StdEncoding.EncodeToString([]byte("https://sts.amazonaws.com/?Version=2020-06-15&Param=value")) + `",
+                "iam_request_headers": "` + base64.StdEncoding.EncodeToString([]byte("{}")) + `",
+                "iam_request_body": "` + base64.StdEncoding.EncodeToString([]byte("Action=GetCallerIdentity&Version=2011-06-15")) + `"
+            }`,
 			expError: `URL query parameters are not allowed for security reasons`,
 		},
 		{
 			name: "Even benign URL parameters should be rejected",
 			tokenJSON: `{
-				"iam_http_request_method": "POST",
-				"iam_request_url": "` + base64.StdEncoding.EncodeToString([]byte("https://sts.amazonaws.com/?foo=bar")) + `",
-				"iam_request_headers": "` + base64.StdEncoding.EncodeToString([]byte("{}")) + `",
-				"iam_request_body": "` + base64.StdEncoding.EncodeToString([]byte("Action=GetCallerIdentity&Version=2011-06-15")) + `"
-			}`,
+                "iam_http_request_method": "POST",
+                "iam_request_url": "` + base64.StdEncoding.EncodeToString([]byte("https://sts.amazonaws.com/?foo=bar")) + `",
+                "iam_request_headers": "` + base64.StdEncoding.EncodeToString([]byte("{}")) + `",
+                "iam_request_body": "` + base64.StdEncoding.EncodeToString([]byte("Action=GetCallerIdentity&Version=2011-06-15")) + `"
+            }`,
 			expError: `URL query parameters are not allowed for security reasons`,
 		},
 		{
 			name: "Valid request without URL parameters should pass",
 			tokenJSON: `{
-				"iam_http_request_method": "POST",
-				"iam_request_url": "` + base64.StdEncoding.EncodeToString([]byte("https://sts.amazonaws.com/")) + `",
-				"iam_request_headers": "` + base64.StdEncoding.EncodeToString([]byte("{}")) + `",
-				"iam_request_body": "` + base64.StdEncoding.EncodeToString([]byte("Action=GetCallerIdentity&Version=2011-06-15")) + `"
-			}`,
+                "iam_http_request_method": "POST",
+                "iam_request_url": "` + base64.StdEncoding.EncodeToString([]byte("https://sts.amazonaws.com/")) + `",
+                "iam_request_headers": "` + base64.StdEncoding.EncodeToString([]byte("{}")) + `",
+                "iam_request_body": "` + base64.StdEncoding.EncodeToString([]byte("Action=GetCallerIdentity&Version=2011-06-15")) + `"
+            }`,
 			expError: "",
 		},
 	}
