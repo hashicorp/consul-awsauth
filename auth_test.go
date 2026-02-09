@@ -39,6 +39,86 @@ func TestValidateLogin(t *testing.T) {
 		expIdent *IdentityDetails
 		expError string
 	}{
+		// SUCCESS CASES
+		"valid role login without entity details": {
+			server: f.ServerForRole,
+			config: &Config{
+				BoundIAMPrincipalARNs: []string{f.CanonicalRoleARN},
+			},
+			expIdent: &IdentityDetails{
+				EntityName: f.RoleName,
+				EntityId:   f.EntityID,
+				AccountId:  f.AccountID,
+			},
+		},
+		"valid user login without entity details": {
+			server: f.ServerForUser,
+			config: &Config{
+				BoundIAMPrincipalARNs: []string{f.UserARN},
+			},
+			expIdent: &IdentityDetails{
+				EntityName: f.UserName,
+				EntityId:   f.EntityID,
+				AccountId:  f.AccountID,
+			},
+		},
+		"valid role login with entity details": {
+			server: f.ServerForRole,
+			config: &Config{
+				BoundIAMPrincipalARNs:  []string{f.RoleARN},
+				EnableIAMEntityDetails: true,
+			},
+			expIdent: &IdentityDetails{
+				EntityName: f.RoleName,
+				EntityId:   f.EntityID,
+				AccountId:  f.AccountID,
+				EntityPath: f.RolePath,
+				EntityTags: f.RoleTags,
+			},
+		},
+		"valid user login with entity details": {
+			server: f.ServerForUser,
+			config: &Config{
+				BoundIAMPrincipalARNs:  []string{f.UserARN},
+				EnableIAMEntityDetails: true,
+			},
+			expIdent: &IdentityDetails{
+				EntityName: f.UserName,
+				EntityId:   f.EntityID,
+				AccountId:  f.AccountID,
+				EntityPath: f.UserPath,
+				EntityTags: f.UserTags,
+			},
+		},
+		"valid role login with wildcard ARN": {
+			server: f.ServerForRole,
+			config: &Config{
+				BoundIAMPrincipalARNs:  []string{f.RoleARNWildcard},
+				EnableIAMEntityDetails: true,
+			},
+			expIdent: &IdentityDetails{
+				EntityName: f.RoleName,
+				EntityId:   f.EntityID,
+				AccountId:  f.AccountID,
+				EntityPath: f.RolePath,
+				EntityTags: f.RoleTags,
+			},
+		},
+		"valid user login with wildcard ARN": {
+			server: f.ServerForUser,
+			config: &Config{
+				BoundIAMPrincipalARNs:  []string{f.UserARNWildcard},
+				EnableIAMEntityDetails: true,
+			},
+			expIdent: &IdentityDetails{
+				EntityName: f.UserName,
+				EntityId:   f.EntityID,
+				AccountId:  f.AccountID,
+				EntityPath: f.UserPath,
+				EntityTags: f.UserTags,
+			},
+		},
+		// ERROR CASES
 		"no bound principals": {
 			expError: "not trusted",
 			server:   f.ServerForRole,
@@ -127,6 +207,90 @@ func setLoginInputHeaderNames(in *LoginInput) {
 	in.GetEntityURLHeader = "X-Test-URL"
 	in.GetEntityHeadersHeader = "X-Test-Headers"
 	in.GetEntityBodyHeader = "X-Test-Body"
+}
+
+func TestGenerateLoginDataValidation(t *testing.T) {
+	logger := hclog.New(nil)
+
+	cases := map[string]struct {
+		loginInput *LoginInput
+		expError   string
+	}{
+		"nil input": {
+			loginInput: nil,
+			expError:   "LoginInput cannot be nil",
+		},
+		"missing credentials": {
+			loginInput: &LoginInput{
+				STSRegion: "us-west-2",
+				Logger:    logger,
+			},
+			expError: "credentials provider is required",
+		},
+		"missing STS region": {
+			loginInput: &LoginInput{
+				Creds:  credentials.NewStaticCredentialsProvider("fake", "fake", ""),
+				Logger: logger,
+			},
+			expError: "STS region is required",
+		},
+		"IncludeIAMEntity true but missing GetEntityMethodHeader": {
+			loginInput: &LoginInput{
+				Creds:                  credentials.NewStaticCredentialsProvider("fake", "fake", ""),
+				STSRegion:              "us-west-2",
+				IncludeIAMEntity:       true,
+				Logger:                 logger,
+				GetEntityURLHeader:     "X-Test-URL",
+				GetEntityHeadersHeader: "X-Test-Headers",
+				GetEntityBodyHeader:    "X-Test-Body",
+			},
+			expError: "GetEntityMethodHeader is required when IncludeIAMEntity is true",
+		},
+		"IncludeIAMEntity true but missing GetEntityURLHeader": {
+			loginInput: &LoginInput{
+				Creds:                  credentials.NewStaticCredentialsProvider("fake", "fake", ""),
+				STSRegion:              "us-west-2",
+				IncludeIAMEntity:       true,
+				Logger:                 logger,
+				GetEntityMethodHeader:  "X-Test-Method",
+				GetEntityHeadersHeader: "X-Test-Headers",
+				GetEntityBodyHeader:    "X-Test-Body",
+			},
+			expError: "GetEntityURLHeader is required when IncludeIAMEntity is true",
+		},
+		"IncludeIAMEntity true but missing GetEntityHeadersHeader": {
+			loginInput: &LoginInput{
+				Creds:                 credentials.NewStaticCredentialsProvider("fake", "fake", ""),
+				STSRegion:             "us-west-2",
+				IncludeIAMEntity:      true,
+				Logger:                logger,
+				GetEntityMethodHeader: "X-Test-Method",
+				GetEntityURLHeader:    "X-Test-URL",
+				GetEntityBodyHeader:   "X-Test-Body",
+			},
+			expError: "GetEntityHeadersHeader is required when IncludeIAMEntity is true",
+		},
+		"IncludeIAMEntity true but missing GetEntityBodyHeader": {
+			loginInput: &LoginInput{
+				Creds:                  credentials.NewStaticCredentialsProvider("fake", "fake", ""),
+				STSRegion:              "us-west-2",
+				IncludeIAMEntity:       true,
+				Logger:                 logger,
+				GetEntityMethodHeader:  "X-Test-Method",
+				GetEntityURLHeader:     "X-Test-URL",
+				GetEntityHeadersHeader: "X-Test-Headers",
+			},
+			expError: "GetEntityBodyHeader is required when IncludeIAMEntity is true",
+		},
+	}
+
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			_, err := GenerateLoginData(c.loginInput)
+			require.Error(t, err)
+			require.Contains(t, err.Error(), c.expError)
+		})
+	}
 }
 
 func TestValidateHeaderValueWithRequest(t *testing.T) {

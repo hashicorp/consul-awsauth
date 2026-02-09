@@ -40,13 +40,38 @@ type LoginInput struct {
 
 // GenerateLoginData populates the necessary data to send for the bearer token.
 func GenerateLoginData(in *LoginInput) (map[string]interface{}, error) {
+	//Validates the passed input data
+	if in == nil {
+		return nil, fmt.Errorf("LoginInput cannot be nil")
+	}
+	if in.Creds == nil {
+		return nil, fmt.Errorf("credentials provider is required")
+	}
+	if in.STSRegion == "" {
+		return nil, fmt.Errorf("STS region is required")
+	}
+	if in.IncludeIAMEntity {
+		if in.GetEntityMethodHeader == "" {
+			return nil, fmt.Errorf("GetEntityMethodHeader is required when IncludeIAMEntity is true")
+		}
+		if in.GetEntityURLHeader == "" {
+			return nil, fmt.Errorf("GetEntityURLHeader is required when IncludeIAMEntity is true")
+		}
+		if in.GetEntityHeadersHeader == "" {
+			return nil, fmt.Errorf("GetEntityHeadersHeader is required when IncludeIAMEntity is true")
+		}
+		if in.GetEntityBodyHeader == "" {
+			return nil, fmt.Errorf("GetEntityBodyHeader is required when IncludeIAMEntity is true")
+		}
+	}
+
 	ctx := context.Background()
 
 	// Build AWS config from credentials provider
 	// Following v2 pattern: direct struct initialization with required fields
 	cfg := aws.Config{
 		Credentials: in.Creds,
-		Region:      in.STSRegion, // Direct assignment, v2 doesn't need aws.String()
+		Region:      in.STSRegion,
 	}
 
 	// Build STS client options following the functional options pattern
@@ -68,7 +93,7 @@ func GenerateLoginData(in *LoginInput) (map[string]interface{}, error) {
 	var err error
 
 	if in.IncludeIAMEntity {
-		entityData, err = formatSignedEntityRequest(cfg, stsClient, in)
+		entityData, err = formatSignedEntityRequest(ctx, cfg, stsClient, in)
 		if err != nil {
 			return nil, fmt.Errorf("failed to format signed entity request: %w", err)
 		}
@@ -240,8 +265,7 @@ func captureSignedSTSRequest(ctx context.Context, stsClient *sts.Client, in *Log
 
 // formatSignedEntityRequest creates a signed IAM GetRole or GetUser request
 // This is used to include entity information in the authentication token
-func formatSignedEntityRequest(cfg aws.Config, stsClient *sts.Client, in *LoginInput) (*entityRequestData, error) {
-	ctx := context.Background()
+func formatSignedEntityRequest(ctx context.Context, cfg aws.Config, stsClient *sts.Client, in *LoginInput) (*entityRequestData, error) {
 
 	// First, determine the IAM entity (role or user) by calling GetCallerIdentity
 	// This operation requires no special permissions

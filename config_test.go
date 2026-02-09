@@ -124,6 +124,55 @@ func TestConfigValidate(t *testing.T) {
 				},
 			},
 		},
+		"invalid STS endpoint URL": {
+			expError: "error STSEndpoint is invalid",
+			configs: []Config{
+				{
+					BoundIAMPrincipalARNs: []string{principalArn},
+					STSEndpoint:           "://invalid-url",
+				},
+				{
+					BoundIAMPrincipalARNs: []string{principalArn},
+					STSEndpoint:           "not a url",
+				},
+			},
+		},
+		"invalid IAM endpoint URL": {
+			expError: "error IAMEndpoint is invalid",
+			configs: []Config{
+				{
+					BoundIAMPrincipalARNs: []string{principalArn},
+					IAMEndpoint:           "://invalid-url",
+				},
+				{
+					BoundIAMPrincipalARNs: []string{principalArn},
+					IAMEndpoint:           "not a url",
+				},
+			},
+		},
+		"valid STS and IAM endpoints": {
+			includeHeaderNames: true,
+			configs: []Config{
+				{
+					BoundIAMPrincipalARNs: []string{principalArn},
+					STSEndpoint:           "https://sts.amazonaws.com",
+				},
+				{
+					BoundIAMPrincipalARNs: []string{principalArn},
+					IAMEndpoint:           "https://iam.amazonaws.com",
+				},
+				{
+					BoundIAMPrincipalARNs: []string{principalArn},
+					STSEndpoint:           "https://sts.us-west-2.amazonaws.com",
+					IAMEndpoint:           "https://iam.amazonaws.com",
+				},
+				{
+					BoundIAMPrincipalARNs: []string{principalArn},
+					STSEndpoint:           "http://localhost:4566/sts",
+					IAMEndpoint:           "http://localhost:4566/iam",
+				},
+			},
+		},
 	}
 
 	for name, c := range cases {
