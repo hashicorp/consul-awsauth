@@ -25,6 +25,7 @@ type LoginInput struct {
 	Creds            aws.CredentialsProvider
 	IncludeIAMEntity bool
 	STSEndpoint      string
+	IAMEndpoint      string
 	STSRegion        string
 
 	Logger hclog.Logger
@@ -280,8 +281,14 @@ func formatSignedEntityRequest(ctx context.Context, cfg aws.Config, stsClient *s
 		return nil, fmt.Errorf("failed to parse ARN: %w", err)
 	}
 
-	// Create IAM client from the same config (no new session needed in v2)
-	iamClient := iam.NewFromConfig(cfg)
+	// Create IAM client with optional custom endpoint
+	var iamOpts []func(*iam.Options)
+	if in.IAMEndpoint != "" {
+		iamOpts = append(iamOpts, func(o *iam.Options) {
+			o.BaseEndpoint = aws.String(in.IAMEndpoint)
+		})
+	}
+	iamClient := iam.NewFromConfig(cfg, iamOpts...)
 
 	// Create middleware to capture the signed IAM request
 	captureMiddleware := &captureRequestMiddleware{}

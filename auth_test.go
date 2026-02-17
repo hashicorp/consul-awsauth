@@ -178,6 +178,7 @@ func TestValidateLogin(t *testing.T) {
 				Creds:               credentials.NewStaticCredentialsProvider("fake", "fake", ""),
 				IncludeIAMEntity:    c.config.EnableIAMEntityDetails,
 				STSEndpoint:         c.config.STSEndpoint,
+				IAMEndpoint:         c.config.IAMEndpoint,
 				STSRegion:           "fake-region",
 				Logger:              logger,
 				ServerIDHeaderValue: "server.id.example.com",
