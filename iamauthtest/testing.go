@@ -29,6 +29,14 @@ func NewTestServer(t *testing.T, s *Server) *httptest.Server {
 	return server
 }
 
+// NewTLSTestServer is like NewTestServer but serves HTTPS with a self-signed certificate.
+// Use the returned server's Client() to trust it.
+func NewTLSTestServer(t *testing.T, s *Server) *httptest.Server {
+	server := httptest.NewTLSServer(s)
+	t.Cleanup(server.Close)
+	return server
+}
+
 // Server contains configuration for the fake AWS API server.
 type Server struct {
 	GetCallerIdentityResponse responses.GetCallerIdentityResponse

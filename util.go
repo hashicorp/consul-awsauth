@@ -28,6 +28,10 @@ type LoginInput struct {
 	IAMEndpoint      string
 	STSRegion        string
 
+	// Config is an optional base AWS configuration (e.g. from config.LoadDefaultConfig) so that settings
+	// such as the HTTP client (custom CA bundle) and FIPS endpoints are honored. Creds and STSRegion override it.
+	Config *aws.Config
+
 	Logger hclog.Logger
 
 	ServerIDHeaderValue string
@@ -68,12 +72,12 @@ func GenerateLoginData(in *LoginInput) (map[string]interface{}, error) {
 
 	ctx := context.Background()
 
-	// Build AWS config from credentials provider
-	// Following v2 pattern: direct struct initialization with required fields
-	cfg := aws.Config{
-		Credentials: in.Creds,
-		Region:      in.STSRegion,
+	var cfg aws.Config
+	if in.Config != nil {
+		cfg = in.Config.Copy()
 	}
+	cfg.Credentials = in.Creds
+	cfg.Region = in.STSRegion
 
 	// Build STS client options following the functional options pattern
 	var stsOpts []func(*sts.Options)
