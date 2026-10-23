@@ -1,6 +1,6 @@
 module github.com/hashicorp/consul-awsauth
 
-go 1.25
+go 1.26.10
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.41.0
