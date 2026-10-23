@@ -4,7 +4,7 @@ on:
     branches: '**'
 
 env:
-  GO_VERSION: '1.25'
+  GO_VERSION: '1.26.10'
   TEST_RESULTS_DIR: /tmp/test-results
   GOTESTSUM_VERSION: '1.10.1'
 
@@ -20,7 +20,7 @@ jobs:
     - name: golangci-lint
       uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9.2.0
       with:
-        version: 'v2.8'
+        version: 'v2.15'
         args: |
           --verbose
         only-new-issues: false
